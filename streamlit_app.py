@@ -1,5 +1,6 @@
 """Streamlit app example."""
 import os
+import uuid
 import json
 from dotenv import load_dotenv
 import requests
@@ -8,6 +9,20 @@ import streamlit as st
 load_dotenv()
 
 URL = "https://gavinzli-news.hf.space/stream"
+general_category_options = ["suggestion", "compliment", "complain"]
+
+if 'chat_id' not in st.session_state:
+    st.session_state.chat_id = str(uuid.uuid4())
+    st.session_state.user_id = str(uuid.uuid4())
+
+with st.sidebar:
+    # st.header("LLM selection")
+    # st.selectbox("Select LLM", ["GPT-4o"], key="llm_selection")
+    st.header("Data selection")
+    with st.form(key='data_selection'):
+        selected_general_category = st.pills("Feedback Type", general_category_options, selection_mode="multi")
+        submitted = st.form_submit_button(label='Confirm selected data')
+
 def get_answer(query):
     """
     Sends a query to a specified URL and retrieves the answer from the response.
@@ -24,8 +39,8 @@ def get_answer(query):
     }
     payload = json.dumps({
             "query": query,
-            "chat_id": "string",
-            "user_id": "string",
+            "chat_id": st.session_state.chat_id,
+            "user_id": st.session_state.user_id,
             "web": False
             })
     # contexts = []
