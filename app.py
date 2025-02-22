@@ -2,13 +2,10 @@
 import os
 import uuid
 import json
-# from dotenv import load_dotenv
 import requests
 import streamlit as st
 
-# load_dotenv()
-
-URL = "https://gavinzli-news.hf.space/stream"
+DOMAIN = "https://gavinzli-news.hf.space"
 STOCK = ["AAPL","ADBE","AMD","AMZN","ARM","ASML","AVGO","BRK.B","BTC","CHAU","COIN","CVNA",
          "DXYZ","GBTC","GOOG","GOOGL","KULR","MARA","META","MRVL","MSFT","MSTR","NBIS",
          "NFLX","NVDA","PDD","PLTR","QCOM","QQQ","QUBT","RDDT","ROKU","RR","SPY","TEM","TSLA"]
@@ -19,9 +16,8 @@ if 'chat_id' not in st.session_state:
 
 with st.sidebar:
     st.header("Symbols Selection")
-    # with st.form(key='data_selection'):
     stocks = st.multiselect("Select stocks", STOCK)
-        # submitted = st.form_submit_button(label='Confirm')
+    mode = st.selectbox("Mode", ["research", "stream"])
 
 def get_answer(query, symbols):
     """
@@ -47,19 +43,18 @@ def get_answer(query, symbols):
             })
     contexts = []
     response_answer = ""
-    api_response = requests.request("POST", URL, headers=headers,
-                                    data=payload, stream=True, timeout=60)
+    api_response = requests.request(
+        "POST", f"{DOMAIN}/stream", headers=headers,data=payload, stream=True, timeout=60)
     for response_str in api_response.text.strip().split('\n\n'):
         response_list = response_str.split('\n')
         response_str = response_list[1]
         json_object = json.loads(response_str.replace("data: ", ""))
-        if "context" in json_object:
-            contexts.append(json_object['context'])
         if "answer" in json_object:
             response_answer = response_answer + json_object['answer']
+        elif "context" in json_object:
+            contexts.append(json_object['context'])
         # elif "questions" in json_object:
         #     questions = json_object['questions']
-    print(contexts)
     return response_answer
 
 if "messages" not in st.session_state:
