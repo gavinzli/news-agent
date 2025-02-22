@@ -8,7 +8,7 @@ import streamlit as st
 DOMAIN = "https://gavinzli-news.hf.space"
 HEADERS = {
     'Content-Type': 'application/json',
-    'Authorization': f'Bearer {os.environ.get("token")}'
+    'Authorization': f'Bearer {os.environ.get("HF_TOKEN")}'
 }
 STOCK = ["AAPL","ADBE","AMD","AMZN","ARM","ASML","AVGO","BRK.B","BTC","CHAU","COIN","CVNA",
          "DXYZ","GBTC","GOOG","GOOGL","KULR","MARA","META","MRVL","MSFT","MSTR","NBIS",
@@ -20,8 +20,8 @@ if 'chat_id' not in st.session_state:
 
 with st.sidebar:
     st.header("Symbols Selection")
-    symbols = st.multiselect("Select stocks", STOCK)
-    mode = st.selectbox("Mode", ["research", "stream"], default="stream")
+    symbols = st.multiselect("Select stocks", STOCK, default=["AAPL"])
+    mode = st.selectbox("Mode", ["research", "stream"], default=["stream"])
     retrivers = st.multiselect("Retrievers", ["duckduckgo", "google"], default=["duckduckgo"])
 
 def get_research(query):
