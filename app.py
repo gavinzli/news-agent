@@ -46,7 +46,9 @@ def get_research(query):
     })
     response = requests.request(
         "POST", f"{DOMAIN}/research", headers=HEADERS, data=payload, timeout=100)
-    return response.json()["report"]
+    response = response.json()
+    print(response["report"])
+    return response["report"]
 
 def get_answer(query):
     """
