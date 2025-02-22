@@ -21,7 +21,7 @@ if 'chat_id' not in st.session_state:
 with st.sidebar:
     st.header("Symbols Selection")
     symbols = st.multiselect("Select stocks", STOCK, default=["AAPL"])
-    mode = st.selectbox("Mode", ["research", "stream"], default=["stream"])
+    mode = st.multiselect("Mode", ["research", "stream"], default=["stream"])
     retrivers = st.multiselect("Retrievers", ["duckduckgo", "google"], default=["duckduckgo"])
 
 def get_research(query):
