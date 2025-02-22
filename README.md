@@ -1,3 +1,6 @@
+sdk: streamlit
+sdk_version: 1.42.0 # The latest supported version
+
 # 🎈 Blank app template
 
 A simple Streamlit app template for you to modify!
