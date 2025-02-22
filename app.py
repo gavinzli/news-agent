@@ -6,6 +6,10 @@ import requests
 import streamlit as st
 
 DOMAIN = "https://gavinzli-news.hf.space"
+HEADERS = {
+    'Content-Type': 'application/json',
+    'Authorization': f'Bearer {os.environ.get("token")}'
+}
 STOCK = ["AAPL","ADBE","AMD","AMZN","ARM","ASML","AVGO","BRK.B","BTC","CHAU","COIN","CVNA",
          "DXYZ","GBTC","GOOG","GOOGL","KULR","MARA","META","MRVL","MSFT","MSTR","NBIS",
          "NFLX","NVDA","PDD","PLTR","QCOM","QQQ","QUBT","RDDT","ROKU","RR","SPY","TEM","TSLA"]
@@ -16,10 +20,35 @@ if 'chat_id' not in st.session_state:
 
 with st.sidebar:
     st.header("Symbols Selection")
-    stocks = st.multiselect("Select stocks", STOCK)
-    mode = st.selectbox("Mode", ["research", "stream"])
+    symbols = st.multiselect("Select stocks", STOCK)
+    mode = st.selectbox("Mode", ["research", "stream"], default="stream")
+    retrivers = st.multiselect("Retrievers", ["duckduckgo", "google"], default=["duckduckgo"])
 
-def get_answer(query, symbols):
+def get_research(query):
+    """
+    Sends a POST request to the research endpoint with the given query.
+
+    Args:
+        query (str): The search query to be sent in the request payload.
+
+    Returns:
+        str: The response text from the research endpoint.
+
+    Raises:
+        requests.exceptions.RequestException: If there is an issue with the request.
+    """
+    payload = json.dumps({
+        "query": query,
+        "symbols": symbols,
+        "headers": {
+            "retrievers": ",".join(retrivers)
+        }
+    })
+    response = requests.request(
+        "POST", f"{DOMAIN}/research", headers=HEADERS, data=payload, timeout=100)
+    return response.text
+
+def get_answer(query):
     """
     Sends a query to a specified URL and retrieves the answer from the response.
 
@@ -30,10 +59,6 @@ def get_answer(query, symbols):
     Returns:
         str: The answer extracted from the response.
     """
-    headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {os.environ.get("token")}'
-    }
     payload = json.dumps({
             "query": query,
             "chat_id": st.session_state.chat_id,
@@ -44,7 +69,7 @@ def get_answer(query, symbols):
     contexts = []
     response_answer = ""
     api_response = requests.request(
-        "POST", f"{DOMAIN}/stream", headers=headers,data=payload, stream=True, timeout=60)
+        "POST", f"{DOMAIN}/stream", headers=HEADERS,data=payload, stream=True, timeout=60)
     for response_str in api_response.text.strip().split('\n\n'):
         response_list = response_str.split('\n')
         response_str = response_list[1]
@@ -69,8 +94,10 @@ if prompt := st.chat_input("What is up?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-
-    answer = get_answer(prompt, stocks)
+    if mode == 'stream':
+        answer = get_answer(prompt)
+    else:
+        answer = get_research(prompt)
     with st.chat_message("assistant"):
         response_content = st.markdown(answer)
     st.session_state.messages.append({"role": "assistant", "content": answer})
