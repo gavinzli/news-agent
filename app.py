@@ -20,7 +20,7 @@ if 'chat_id' not in st.session_state:
 with st.sidebar:
     st.header("Symbols Selection")
     # with st.form(key='data_selection'):
-    stocks = st.pills(" ", STOCK, selection_mode="multi")
+    stocks = st.multiselect("Select stocks", STOCK)
         # submitted = st.form_submit_button(label='Confirm')
 
 def get_answer(query, symbols):
