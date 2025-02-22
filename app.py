@@ -2,31 +2,34 @@
 import os
 import uuid
 import json
+# from dotenv import load_dotenv
 import requests
 import streamlit as st
 
+# load_dotenv()
+
 URL = "https://gavinzli-news.hf.space/stream"
-general_category_options = ["suggestion", "compliment", "complain"]
+STOCK = ["AAPL","ADBE","AMD","AMZN","ARM","ASML","AVGO","BRK.B","BTC","CHAU","COIN","CVNA",
+         "DXYZ","GBTC","GOOG","GOOGL","KULR","MARA","META","MRVL","MSFT","MSTR","NBIS",
+         "NFLX","NVDA","PDD","PLTR","QCOM","QQQ","QUBT","RDDT","ROKU","RR","SPY","TEM","TSLA"]
 
 if 'chat_id' not in st.session_state:
     st.session_state.chat_id = str(uuid.uuid4())
     st.session_state.user_id = str(uuid.uuid4())
 
 with st.sidebar:
-    # st.header("LLM selection")
-    # st.selectbox("Select LLM", ["GPT-4o"], key="llm_selection")
-    st.header("Data selection")
-    with st.form(key='data_selection'):
-        selected_general_category = st.pills(
-            "Feedback Type",general_category_options, selection_mode="multi")
-        submitted = st.form_submit_button(label='Confirm selected data')
+    st.header("Symbols Selection")
+    # with st.form(key='data_selection'):
+    stocks = st.pills(" ", STOCK, selection_mode="multi")
+        # submitted = st.form_submit_button(label='Confirm')
 
-def get_answer(query):
+def get_answer(query, symbols):
     """
     Sends a query to a specified URL and retrieves the answer from the response.
 
     Args:
         query (str): The query string to be sent.
+        symbols (list): The symbols to be sent
 
     Returns:
         str: The answer extracted from the response.
@@ -39,9 +42,10 @@ def get_answer(query):
             "query": query,
             "chat_id": st.session_state.chat_id,
             "user_id": st.session_state.user_id,
+            "sybols": symbols,
             "web": False
             })
-    # contexts = []
+    contexts = []
     response_answer = ""
     api_response = requests.request("POST", URL, headers=headers,
                                     data=payload, stream=True, timeout=60)
@@ -49,12 +53,13 @@ def get_answer(query):
         response_list = response_str.split('\n')
         response_str = response_list[1]
         json_object = json.loads(response_str.replace("data: ", ""))
-        # if "context" in json_object:
-        #     contexts.append(json_object['context'])
+        if "context" in json_object:
+            contexts.append(json_object['context'])
         if "answer" in json_object:
             response_answer = response_answer + json_object['answer']
         # elif "questions" in json_object:
         #     questions = json_object['questions']
+    print(contexts)
     return response_answer
 
 if "messages" not in st.session_state:
@@ -70,7 +75,7 @@ if prompt := st.chat_input("What is up?"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    answer = get_answer(prompt)
+    answer = get_answer(prompt, stocks)
     with st.chat_message("assistant"):
         response_content = st.markdown(answer)
     st.session_state.messages.append({"role": "assistant", "content": answer})
